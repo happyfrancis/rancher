@@ -1,0 +1,27 @@
+安装docker:yum install docker 
+
+启动docker: systemctl start docker 
+
+安装Rancher2.0版本: sudo docker run -d --restart=unless-stopped -p 80:80 -p 443:443 rancher/server:preview 
+
+安装Rancher1.几版本:sudo docker run -d --restart=unless-stopped -p 80:80 -p 443:443 rancher/server:stable
+
+
+
+国内镜像加速器：
+1.vim /etc/docker/daemon.json
+
+{
+"registry-mirrors":["https://fy707np5.mirror.aliyuncs.com"]
+}
+2.systemctl daemon-reload
+3.systemctl restart docker
+
+运行Rancher:
+sudo docker run -d --restart=unless-stopped -p 8080:8080 rancher/server:stable
+
+ifconfig enp0s3 查看访问rancher ip地址
+
+在Rancher添加主机的页面中负责粘贴出来的
+sudo docker run -e CATTLE_AGENT_IP="172.18.97.149"  --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock -v 
+/var/lib/rancher:/var/lib/rancher rancher/agent:v1.2.10 http://172.18.97.149:8080/v1/scripts/D1A4DF9D93F7F5FC2E8C:1514678400000:CB0Of6VhP5nNAT9uPdHvrMnhyI
