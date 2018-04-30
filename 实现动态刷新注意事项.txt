@@ -1,0 +1,158 @@
+方式一：
+1.需要消息中间件
+2.client端引入动态刷新配置
+<dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+3.使用post（http://127.0.0.1:8080/actuator/bus-refresh）方法访问configServer
+  在版本管理端可以配置，在改动配置文件后，自动访问这个接口，实现动态刷新配置
+4.在需要动态刷新的类上加org.springframework.cloud.context.config.annotation.RefreshScope注解
+configServer暴露接口：management.endpoints.web.exposure.include: "*" springboot.2.0.1.RELEASE版本
+management.endpoints.web.expose: "*" 早期版本
+
+ <!--使用svn做配置文件的版本管理，需要多引入svnkitr包 -->  
+ https://blog.csdn.net/shuai825644975/article/details/79993080
+    <!-- https://mvnrepository.com/artifact/org.tmatesoft.svnkit/svnkit -->  
+    <dependency>  
+        <groupId>org.tmatesoft.svnkit</groupId>  
+        <artifactId>svnkit</artifactId>  
+        <version>1.9.0</version><!--  -->  
+    </dependency>  
+	
+	
+config-server	
+spring:  
+  application:  
+    name: spring-cloud-config-server  #应用程序名  
+  cloud:  
+    config:  
+      enabled: true  
+      server:  
+        svn:  
+          uri: svn://xxxxxxxx/config-repo #svn地址  
+          username: ershuai #svn用户名  
+          password: 123456  #svn密码  
+        default-label: trunk  #trunk，配置文件的目录  
+  profiles:  
+    active: subversion  #表示这是采用的svn进行的spring cloud的配置  
+  
+#动态刷新配置，配置忽略权限拦截  
+management:  
+  security:  
+    enabled: false  
+	
+	
+config-client   	
+spring:   
+  application:  
+    name: spring-cloud-config-client   
+  cloud:  
+    config:  
+      fail-fast: true #失败快速响应，也是重试机制的前提  
+      enabled: true  #高可用配置中心通过ervice-id去自动发现config-server服务组  
+      service-id: spring-cloud-config-server  #高可用配置中心通过服务Id去自动发现config-server服务组  
+      name: es-config  #对应{application}部分，对应es-config-dev.properties  
+      profile: dev  #对应{profile}部分，对应es-config-dev.properties，开发环境配置dev，测试环境配置test，线上环境配置pro  
+      #uri: http://localhost:8888/  #配置中心的具体地址  
+      default-label: trunk  #trunk，配置文件的目录  
+	  
+	  ### 重试的参数 ###  
+#spring.cloud.config.retry.max-attempts=6         配置重试次数，默认为6  
+#spring.cloud.config.retry.multiplier=1.1          间隔乘数，默认1.1  
+#spring.cloud.config.retry.initial-interval=1000   初始重试间隔时间，默认1000ms  
+#spring.cloud.config.retry.max-interval=2000       最大间隔时间，默认2000ms  
+### 重试的参数 ###  
+  
+#动态刷新配置，配置忽略权限拦截  
+management:  
+  security:  
+    enabled: false  
+	
+	<!-- 支持动态刷新配置 -->  
+        <dependency>  
+            <groupId>org.springframework.boot</groupId>  
+            <artifactId>spring-boot-starter-actuator</artifactId>  
+        </dependency>  
+      
+        <!-- 支持重试机制，前提还需要开启spring.cloud.config.fail-fast=true -->  
+        <dependency>  
+            <groupId>org.springframework.retry</groupId>  
+            <artifactId>spring-retry</artifactId>  
+        </dependency>  
+        <dependency>  
+            <groupId>org.springframework.boot</groupId>  
+            <artifactId>spring-boot-starter-aop</artifactId>  
+        </dependency>  
+        <!-- 支持重试机制 -->  
+
+Consul 是 HashiCorp 公司推出的开源工具，用于实现分布式系统的服务发现与配置
+https://my.oschina.net/giegie/blog/1634479
+方式二: Spring Cloud Consul 
+
+<dependency>
+	<groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-starter-consul-all</artifactId>
+</dependency>
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+
+consul-all依赖提供了哪些功能？
+<!--消息总线，提供配置实时刷新，不再依赖中间件-->
+<dependency>
+	<groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-starter-consul-bus</artifactId>
+</dependency>
+<!--consul的配置中心功能-->
+<dependency>
+	<groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-starter-consul-config</artifactId>
+</dependency>
+<!--服务注册和发现功能-->
+<dependency>
+	<groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-starter-consul-discovery</artifactId>
+</dependency>
+
+bootstrap.yml
+
+spring:
+  application:
+    name: pig-consul
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
+      config:
+        enabled: true
+        format: KEY_VALUE
+        watch:
+          enabled: true
+        prefix: pig-config
+		
+安装consul
+下载： https://www.consul.io/downloads.html
+使用：（dev模式，生产建议cluster模式）
+-dev表示开发模式运行，使用-client 参数可指定允许客户端使用什么ip去访问，例如-client 127.0.0.1 表示可以使用。  
+consul agent -dev -client 127.0.0.1
+生产配置参考：
+https://www.consul.io/intro/getting-started/join.html
+http://127.0.0.1:8500/ui/ 去访问 
+
+spring:
+  cloud:
+    consul:
+      config:
+        watch:
+          enabled: true
+然后应用要开启定时任务
+@EnableScheduling
+
+
+获赠：免费壳域名l20661914g.51mypc.cn、23元.com顶级域名红包
+
+	
+springboot.2.0.1.RELEASE和springcloud.Finchley.BUILD-SNAPSHOT两个版本通过webhooks实现动态刷新配置 
+需要注意在gitHub的配置文件名和客户端spring.application.name属性名需要保持一致

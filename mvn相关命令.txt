@@ -1,0 +1,1 @@
+mvn -Dmaven.test.skip -U clean install 安装架包
