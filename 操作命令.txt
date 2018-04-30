@@ -6,6 +6,8 @@
 
 安装Rancher1.几版本:sudo docker run -d --restart=unless-stopped -p 80:80 -p 443:443 rancher/server:stable
 
+运行Rancher:
+sudo docker run -d --restart=unless-stopped -p 8080:8080 rancher/server:stable
 
 
 国内镜像加速器：
@@ -17,8 +19,7 @@
 2.systemctl daemon-reload
 3.systemctl restart docker
 
-运行Rancher:
-sudo docker run -d --restart=unless-stopped -p 8080:8080 rancher/server:stable
+
 
 ifconfig enp0s3 查看访问rancher ip地址
 
